@@ -24,11 +24,11 @@ public:
     envD = 20000;
     envS = 200000;
     envR = 30;
-	  accu = 0;
-	  phaseA = false;
-	  phaseD = false;
-	  phaseS = false;
-	  phaseR = false;
+    accu = 0;
+    phaseA = false;
+    phaseD = false;
+    phaseS = false;
+    phaseR = false;
   }
   
   void start()
@@ -89,12 +89,12 @@ public:
         accu -= envR;
       }
       else 
-	  {
-	    phaseR = false;
-		accu = 0;
+      {
+        phaseR = false;
+        accu = 0;
       }
     }
 	
-	return accu;
+    return accu;
   }
 };
