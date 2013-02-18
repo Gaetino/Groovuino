@@ -1,7 +1,7 @@
 #include <arduino.h>
 
 const int chipSelect = 10;
-const int bufsize = 512;
+const int bufsize = 1024;
 
 
 typedef struct {
@@ -25,11 +25,10 @@ typedef struct {
 
 class Sampler
 {
-  
+	
 public:
    uint32_t volsample;
-   uint32_t ulPhaseAccumulator; 
-   volatile uint32_t ulPhaseIncrement ;  
+   uint32_t volglobal;
    boolean play;
    int indbuf;
    uint16_t bufread;
@@ -37,6 +36,8 @@ public:
    int16_t buf[2][bufsize];
    uint32_t possample;
    uint32_t endofsample;
+   uint32_t decrease;
+   uint16_t samplenote;
    
    SdFile myFile;
    
@@ -45,20 +46,20 @@ public:
    
    void init()
    {
-     volsample = 64;
-     ulPhaseAccumulator = 0; 
+     volsample = 0;
      indbuf =0;
      bufread = 0;
      lastbuf = 0;
-     ulPhaseIncrement = 1;  
-     play = false;	 
-     endofsample = header.chunk_size;
+     play = false;
+     volglobal = 800;	 
    }
    
-   void splay(uint32_t vol)
+   void splay(uint32_t vol, uint16_t note)
    {
+     
      play=true;
-     volsample = vol;
+     volglobal = vol;
+     samplenote=note;
    }
    
    void load(const char* samplename)
@@ -68,7 +69,10 @@ public:
      possample = 44;
      myFile.open(samplename, O_READ);
      myFile.read(&header, sizeof(header));
+     endofsample = header.chunk_size;
      myFile.read(buf[0], sizeof(buf[0]));
+     volsample = 0;
+     decrease = endofsample-(2048*header.num_channels);
    }
    
    void sstop()
@@ -77,15 +81,18 @@ public:
      myFile.close();
    }
    
-   void setNote(uint32_t note, uint32_t vol)
+   void notestop(uint16_t note)
    {
-     ulPhaseIncrement = 1; 
-     if(vol!=0) volsample = vol;
+     if(samplenote==note) 
+     {
+       decrease = possample;
+       endofsample = possample + header.num_channels*2048;  
+     }
    }
    
    void setVol(uint32_t vol)
    {
-     volsample = vol;
+     volglobal = vol;
    }
    
    void setEnd(uint32_t theEnd)
@@ -99,9 +106,9 @@ public:
      {
        if(bufread==lastbuf)
        {
-          if(lastbuf==0) lastbuf = 1;
-          else lastbuf = 0;
-          myFile.read(buf[lastbuf], sizeof(buf[lastbuf]));
+         if(lastbuf==0) lastbuf = 1;
+         else lastbuf = 0;
+	 myFile.read(buf[lastbuf], sizeof(buf[lastbuf]));
        }
      }
    }
@@ -115,38 +122,42 @@ public:
        indbuf += header.num_channels;
        possample += (header.num_channels + header.num_channels);
 		 
-       if(possample>=(endofsample-128))
+       if(possample>=decrease)
        {
-         if(volsample>0) volsample--;
+         if(volsample>0) volsample -= 1;
        }
-	 
-       if(possample>=(endofsample-1))
-       {
-         play = false;
-	 myFile.close();
-       }
-
-       if(indbuf>=bufsize)
-       {
-         if(bufread==0) bufread = 1;
-	 else bufread = 0;
-	       
-	 indbuf=0;
-       }
-     } 
-   }
-   
-   uint32_t output()
-   {
-     uint32_t ret;
-	   
-     if(play)
-     {
-       ret = (((buf[bufread][indbuf]+32768)>>4)*volsample)>>7;
-     }
-     else ret = 0;
 		 
-     return ret;
-   }
+      if(volsample<=volglobal&&possample<=1024)
+      {
+         volsample += 8;
+      }
+		 
+      if(possample>=(endofsample-1))
+      {
+         play = false;
+         myFile.close();
+      }
+
+      if(indbuf>=bufsize)
+      {
+        if(bufread==0) bufread = 1;
+        else bufread = 0;
+	       
+        indbuf=0;
+      }
+    } 
+  }
    
+  uint32_t output()
+  {
+    uint32_t ret;
+	   
+    if(play)
+    {
+      ret = (((buf[bufread][indbuf]+32768)>>4)*volsample)>>10;
+    }
+    else ret = 0;
+		 
+    return ret;
+  }
 };
