@@ -7,7 +7,7 @@
 #include <osc.h>
 #include <env.h>
 #include <SdFat.h>
-#include <sampler4.h>
+#include <sampler.h>
 
 #define POLIPHONY 1
 
