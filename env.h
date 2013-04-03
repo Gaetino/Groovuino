@@ -47,6 +47,26 @@ public:
     phaseR = true;
   }
   
+  void setA(uint32_t val)
+  {
+    envA = 10000/(val*16+1);
+  }
+  
+  void setD(uint32_t val)
+  {
+    envD = (524288-envS)*50/((val+1)*44100);
+  }
+  
+  void setS(uint32_t val)
+  {
+    envS = val<<12;
+  }
+  
+  void setR(uint32_t val)
+  {
+    envR = envS*200/((val+1)*44100);
+  }  
+  
   uint32_t amount()
   {
 // ATTACK
