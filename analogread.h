@@ -48,7 +48,7 @@ void analogcontroller_read()
     uint32_t ribbondata = analogRead(0);
     uint32_t distdata = analogRead(1);
     uint32_t pressdata = analogRead(2);
-  
+	
 //--------------------------------
 //           MODE 0
 //--------------------------------
@@ -156,22 +156,22 @@ void analogcontroller_read()
 //           MODE 1
 //--------------------------------
     if(mode==1)
-	{
+    {
       if(ecartStock(508)>9)
       {
         if(ecartStock(moyenneStock())<3)
         {
           transpo = (((int)ribbondata-508)/150)*12;
-		  load_arpeg();
-		}
+	  load_arpeg();
+	}
       }
       if(indicestock == (BUFRIB-1)) indicestock = 0;
       else indicestock++;
       stockribbon[indicestock] = ribbondata;
       delay(3);
 	  
-	  change_length_arpeg((1024-distdata)>>3);
-	}
+      change_length_arpeg((1024-distdata)>>3);
+    }
 
 //***************************************************************************
 	
@@ -217,43 +217,37 @@ void analogcontroller_read()
         }
       }
   //------ ARPEGGIATOR MODE -------- 
-	  if(mode==1)
+      if(mode==1)
       {
-	    if(pot1<25)
-		{
-		  arpmode = 0;
-		  
-		}
-		if(pot1>=25 && pot1<50)
-		{
-		  arpmode = 1;
-		  load_arpeg();
-		  //startTimer(TC1, 0, TC3_IRQn, (bpm*24/60));
-		  
-		}
+	if(pot1<25)
+	{
+	  arpmode = 0;
+	}
+
+        if(pot1>=25 && pot1<50)
+        {
+	  arpmode = 1;
+	  load_arpeg();
+	}
 		
-		if(pot1>=50 && pot1<75)
-		{
-		  arpmode = 2;
-		  load_arpeg();
-		  //startTimer(TC1, 0, TC3_IRQn, (bpm*24/60));
-		  
-		}
-		if(pot1>=75 && pot1<100)
-		{
-		  arpmode = 3;
-		  load_arpeg();
-		  //startTimer(TC1, 0, TC3_IRQn, (bpm*24/60));
-		  
-		}
-		if(pot1>=100 && pot1<128)
-		{
-		  arpmode = 4;
-		  load_arpeg();
-		  //startTimer(TC1, 0, TC3_IRQn, (bpm*24/60));
-		  
-		}
-	  }
+	if(pot1>=50 && pot1<75)
+	{
+	  arpmode = 2;
+	  load_arpeg();
+	}
+		
+	if(pot1>=75 && pot1<100)
+	{
+	  arpmode = 3;
+	  load_arpeg();
+	}
+		
+	if(pot1>=100 && pot1<128)
+	{
+	  arpmode = 4;
+	  load_arpeg();
+	}
+      }
       pot1save = pot1;
     }
 	
@@ -296,39 +290,39 @@ void analogcontroller_read()
         }
       }
 //------ ARPEGGIATOR MODE -------- 
-	  if(mode==1)
+      if(mode==1)
       {
-	    if(pot2<20)
-		{
-		  arpspeed = 1;
-		  load_arpeg();
-		}
-		if(pot2>=20 && pot2<40)
-		{
-		  arpspeed = 2;
-		  load_arpeg();
-		}
-		if(pot2>=40 && pot2<60)
-		{
-		  arpspeed = 3;
-		  load_arpeg();
-		}
-		if(pot2>=60 && pot2<80)
-		{
-		  arpspeed = 4;
-		  load_arpeg();
-		}
-		if(pot2>=80 && pot2<100)
-		{
-		  arpspeed = 5;
-		  load_arpeg();
-		}
-		if(pot2>=100 && pot2<128)
-		{
-		  arpspeed = 6;
-		  load_arpeg();
-		}
-	  }
+      if(pot2<20)
+	{
+	  arpspeed = 1;
+	  load_arpeg();
+	}
+	if(pot2>=20 && pot2<40)
+	{
+	  arpspeed = 2;
+	  load_arpeg();
+	}
+	if(pot2>=40 && pot2<60)
+	{
+	  arpspeed = 3;
+	  load_arpeg();
+	}
+	if(pot2>=60 && pot2<80)
+	{
+	  arpspeed = 4;
+	  load_arpeg();
+	}
+	if(pot2>=80 && pot2<100)
+	{
+	  arpspeed = 5;
+	  load_arpeg();
+	}
+	if(pot2>=100 && pot2<128)
+	{
+	  arpspeed = 6;
+	  load_arpeg();
+	}
+      }
       pot2save = pot2;
     }
 	
@@ -360,6 +354,35 @@ void analogcontroller_read()
 		  
         }
       }
+//------ ARPEGGIATOR MODE -------- 
+      if(mode==1)
+      {
+	if(pot3<25)
+	{
+	  arpgamme = 0;
+	  load_arpeg();
+	}
+	if(pot3>=25 && pot3<50)
+	{
+	  arpgamme = 1;
+	  load_arpeg();
+	}
+	if(pot3>=50 && pot3<75)
+	{
+	  arpgamme = 2;
+	  load_arpeg();
+	}
+	if(pot3>=75 && pot3<100)
+	{
+	  arpgamme = 3;
+	  load_arpeg();
+	}
+	if(pot3>=100 && pot3<128)
+	{
+	  arpgamme = 4;
+	  load_arpeg();
+	}
+      }
       pot3save = pot3;
     }
 
@@ -371,13 +394,12 @@ void analogcontroller_read()
  //------ SYNTH MODE -------
       if(mode==0)
       {
-	    if(function==3)
+	if(function==3)
         {
           env1[0].setR(pot4);
         }
-	  }
-	}
-	
+      }
+    }
 }
 
 
