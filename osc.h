@@ -3,7 +3,6 @@
 #include <clavinet01.h>
 #include <ebass01.h>
 
-//Choose number of Oscillators for 1 voice
 #define NUM_OSC 3 
 
 #define SAMPLE_RATE 44100.0 
@@ -25,6 +24,7 @@ public:
    uint32_t ulPhaseAccumulator[NUM_OSC]; 
    volatile uint32_t ulPhaseIncrement[NUM_OSC] ;   
    int8_t octave[NUM_OSC];
+//GLIDE
    uint8_t noteplaying;
    boolean glideon;
    boolean glidestart;
@@ -33,7 +33,9 @@ public:
    uint32_t Incrementglide[NUM_OSC];
    uint32_t Incrementfin[NUM_OSC];
 
+
    float fFrequency;
+   
    
    void init()
    {
@@ -64,6 +66,7 @@ public:
      octave[1] = 0;
      octave[2] = -1;
 	 
+//GLIDE
      glideon = true;
      glidestart = false;
      Incrementglide[0]=0;
@@ -79,6 +82,7 @@ public:
    
    void setNote(uint32_t note, uint32_t vol)
    {
+	
      if(note!=noteplaying && glideon && play)
      {
        for(int i=0; i<NUM_OSC; i++)
@@ -99,7 +103,6 @@ public:
        }
        play = true;
      }
-	 
      if(vol!=0) 
      {
        volglb = vol;
@@ -115,7 +118,7 @@ public:
    
    void setVolOsc(uint8_t num, uint32_t vol)
    {
-     volosc[num] = vol;
+     volosc[num] = vol>>1;
    }
    
    void setWaveform(uint8_t num, uint32_t val)
@@ -139,37 +142,37 @@ public:
    
    void next()
    {
-      for(int i=0; i<NUM_OSC; i++)
-      {
-        ulPhaseAccumulator[i] += ulPhaseIncrement[i];   
-        if(ulPhaseAccumulator[i] > SAMPLES_PER_CYCLE_FIXEDPOINT) 
-        { 
-          ulPhaseAccumulator[i] -= SAMPLES_PER_CYCLE_FIXEDPOINT; 
-        } 
-        if(ulPhaseIncrement[i]<Incrementfin[i]) 
-	{
-	  if((Incrementfin[i]-ulPhaseIncrement[i])<=Incrementglide[i])
-	  {
-	    ulPhaseIncrement[i] = Incrementfin[i];
-          }
-	  else ulPhaseIncrement[i] += Incrementglide[i];
-	}
-	if(ulPhaseIncrement[i]>Incrementfin[i]) 
-	{
-	  if((ulPhaseIncrement[i]-Incrementfin[i])<=Incrementglide[i])
-	  {
-	    ulPhaseIncrement[i] = Incrementfin[i];
-	  }
-	  else ulPhaseIncrement[i] -= Incrementglide[i];
-	}
-      }		 
+     for(int i=0; i<NUM_OSC; i++)
+     {
+       ulPhaseAccumulator[i] += ulPhaseIncrement[i];   
+       if(ulPhaseAccumulator[i] > SAMPLES_PER_CYCLE_FIXEDPOINT) 
+       { 
+         ulPhaseAccumulator[i] -= SAMPLES_PER_CYCLE_FIXEDPOINT; 
+       } 
+       if(ulPhaseIncrement[i]<Incrementfin[i]) 
+       {
+         if((Incrementfin[i]-ulPhaseIncrement[i])<=Incrementglide[i])
+         {
+           ulPhaseIncrement[i] = Incrementfin[i];
+         }
+         else ulPhaseIncrement[i] += Incrementglide[i];
+       }
+       if(ulPhaseIncrement[i]>Incrementfin[i]) 
+       {
+         if((ulPhaseIncrement[i]-Incrementfin[i])<=Incrementglide[i])
+         {
+           ulPhaseIncrement[i] = Incrementfin[i];
+         }
+         else ulPhaseIncrement[i] -= Incrementglide[i];
+       }
+     }		 
    }
    
    uint32_t output()
    {
      uint32_t ret=0;
      for(int i=0; i<NUM_OSC; i++)
-     {
+	 {
        if(waveform[i] == 0) ret+= (nSineTable[ulPhaseAccumulator[i]>>20]* volosc[i])>>7;
        if(waveform[i] == 1) ret+= (nSawTable[ulPhaseAccumulator[i]>>20]* volosc[i])>>7;
        if(waveform[i] == 2) ret+= (nSqTable[ulPhaseAccumulator[i]>>20]* volosc[i])>>7;
@@ -178,4 +181,5 @@ public:
      }
      return ret;
    }
+   
 };
