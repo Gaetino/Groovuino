@@ -29,19 +29,20 @@ public:
    uint32_t ulPhaseAccumulator[NUM_OSC];          // Position in the reading of each oscillator table 
    volatile uint32_t ulPhaseIncrement[NUM_OSC] ;  // Reading speed of each oscillaotr table 
    int8_t octave[NUM_OSC];                        // Octave of each oscillator
+
 //GLIDE
-   uint8_t noteplaying;
-   boolean glideon;
-   boolean glidestart;
-   boolean play;
-   uint32_t glidetime;
-   uint32_t Incrementglide[NUM_OSC];
-   uint32_t Incrementfin[NUM_OSC];
+   uint8_t noteplaying;                           // true : a note is already playing - false : no note is playing
+   boolean glideon;                               // true : glide is ON - false : glide is OFF
+   boolean glidestart;                            // true : glide already started - false : glide is not started
+   boolean play;                                  
+   uint32_t glidetime;                            // glide time in ms
+   uint32_t Incrementglide[NUM_OSC];              // glide speed
+   uint32_t Incrementfin[NUM_OSC];                // target frequency
 
 
    float fFrequency;
    
-   
+// initialize the synth. Here you can put your default values   
    void init()
    {
      volglb = 0;
