@@ -3,27 +3,32 @@
 #include <clavinet01.h>
 #include <ebass01.h>
 
+// Change this to change the number of oscillators per voice
 #define NUM_OSC 3 
 
+// Can adjust the Sample rate
 #define SAMPLE_RATE 44100.0 
+
+// Number of samples played in one cycle (a cycle depends on the frequency of the note played)
 #define SAMPLES_PER_CYCLE 600 
+
 #define SAMPLES_PER_CYCLE_FIXEDPOINT (SAMPLES_PER_CYCLE<<20) 
 #define TICKS_PER_CYCLE (float)((float)SAMPLES_PER_CYCLE_FIXEDPOINT/(float)SAMPLE_RATE) 
 
 
-
+// This class represents a voice of synth. It can have several oscillators
 class Osc
 {
 	
 public:
-   uint32_t volglb;
-   uint32_t volglbsave;
-   uint16_t waveform[NUM_OSC];
-   uint32_t volosc[NUM_OSC];
-   float fine[NUM_OSC];
-   uint32_t ulPhaseAccumulator[NUM_OSC]; 
-   volatile uint32_t ulPhaseIncrement[NUM_OSC] ;   
-   int8_t octave[NUM_OSC];
+   uint32_t volglb;                               // Volume global
+   uint32_t volglbsave;                           // Volume global temporary save  
+   uint16_t waveform[NUM_OSC];                    // Waveform of each oscillator 
+   uint32_t volosc[NUM_OSC];                      // Volume of each oscillator
+   float fine[NUM_OSC];                           // Fine of each oscillator
+   uint32_t ulPhaseAccumulator[NUM_OSC];          // Position in the reading of each oscillator table 
+   volatile uint32_t ulPhaseIncrement[NUM_OSC] ;  // Reading speed of each oscillaotr table 
+   int8_t octave[NUM_OSC];                        // Octave of each oscillator
 //GLIDE
    uint8_t noteplaying;
    boolean glideon;
