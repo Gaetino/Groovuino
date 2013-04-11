@@ -42,7 +42,7 @@ public:
 
    float fFrequency;
    
-// initialize the synth. Here you can put your default values   
+// initialize the synth. Here you can put your default values.   
    void init()
    {
      volglb = 0;
@@ -85,10 +85,12 @@ public:
      glidetime = 1000; // (en ms)
      play = false;
    }
-   
+
+// Set the note (frequency), and volume 
    void setNote(uint32_t note, uint32_t vol)
    {
-	
+// If we are in glide mode and the synth is not playing, we have to compute the glide increment (= glide speed)	
+// We do not have to change the frequency value, it's the glide increment which will change it
      if(note!=noteplaying && glideon && play)
      {
        for(int i=0; i<NUM_OSC; i++)
@@ -99,6 +101,7 @@ public:
 	 if(Incrementglide[i]==0) Incrementglide[i] = 1;
        }
      }
+//If we are not in glide mode, compute the frequency of the new note
      else
      {
        for(int i=0; i<NUM_OSC; i++)
@@ -107,26 +110,32 @@ public:
          ulPhaseIncrement[i] = fFrequency; 
 	 Incrementfin[i] = fFrequency; 
        }
+       // The synth is playing
        play = true;
      }
+//Fill the volume data
      if(vol!=0) 
      {
        volglb = vol;
        noteplaying = note;
      }
+// If the volume = 0, we consider that the synth is stopped
      else play = false;
    }
 
+// Stop the playing of the synth
    void stop(uint8_t note)
    {
      if(note==noteplaying) play = false;
    }
-   
+
+// Set the volume of one oscillator
    void setVolOsc(uint8_t num, uint32_t vol)
    {
      volosc[num] = vol>>1;
    }
-   
+
+// Set the waveform of one oscillator
    void setWaveform(uint8_t num, uint32_t val)
    {
      if(val<25) waveform[num] = 0;
@@ -135,17 +144,20 @@ public:
      if(val>=75&&val<100) waveform[num] = 3;
      if(val>=100) waveform[num] = 4;
    }
-  
+
+// Set the fine tune of one oscillator
    void setFine(uint8_t num, uint32_t val)
    {
      fine[num] = val;
    }
-   
+
+//Set the glide time
    void setGlideTime(uint32_t glt)
    {
      glidetime = glt * 10+1;
    }
-   
+
+// Compute the table position in the wavetable from increment values
    void next()
    {
      for(int i=0; i<NUM_OSC; i++)
@@ -173,7 +185,8 @@ public:
        }
      }		 
    }
-   
+
+//Return the sample value from the wavetable 
    uint32_t output()
    {
      uint32_t ret=0;
