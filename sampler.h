@@ -1,9 +1,10 @@
 #include <arduino.h>
 
-const int chipSelect = 10;
-const int bufsize = 1024;
+const int chipSelect = 10;         // For Due, the SS of SD Card is on pin 10. See SdFat library
+const int bufsize = 1024;          // buffer size in bytes.
 
-
+// Header of a wave file.
+// Num_channels will tell us if we are in stereo (2) or mono (1)
 typedef struct {
   char RIFF[4]; 
   int32_t chunk_size;
@@ -22,22 +23,22 @@ typedef struct {
 
 
 
-
+// Here is our sampler class
 class Sampler
 {
 	
 public:
-   uint32_t volsample;
-   uint32_t volglobal;
-   boolean play;
-   int indbuf;
-   uint16_t bufread;
-   uint16_t lastbuf;
-   int16_t buf[2][bufsize];
-   uint32_t possample;
-   uint32_t endofsample;
-   uint32_t decrease;
-   uint16_t samplenote;
+   uint32_t volsample;         // volume applied to the sample (including enveloppe volume)
+   uint32_t volglobal;         // volume max of the sample (when sustain)
+   boolean play;               // is the sample playing or not ?
+   int indbuf;                 // buffer number
+   uint16_t bufread;           // buffer being read number
+   uint16_t lastbuf;           // last buffer read number
+   int16_t buf[2][bufsize];    // buffer
+   uint32_t possample;         // sample position
+   uint32_t endofsample;       // end of sample
+   uint32_t decrease;          // decrease speed
+   uint16_t samplenote;        // sample note
    
    SdFile myFile;
    
