@@ -1,7 +1,5 @@
 #include <arduino.h>
 #include <tables.h>
-#include <clavinet01.h>
-#include <ebass01.h>
 
 // Change this to change the number of oscillators per voice
 #define NUM_OSC 3 
@@ -21,10 +19,10 @@ class Osc
 {
 	
 public:
-   uint32_t volglb;                               // Volume global
-   uint32_t volglbsave;                           // Volume global temporary save  
+   int32_t volglb;                               // Volume global
+   int32_t volglbsave;                           // Volume global temporary save  
    uint16_t waveform[NUM_OSC];                    // Waveform of each oscillator 
-   uint32_t volosc[NUM_OSC];                      // Volume of each oscillator
+   int32_t volosc[NUM_OSC];                      // Volume of each oscillator
    float fine[NUM_OSC];                           // Fine of each oscillator
    uint32_t ulPhaseAccumulator[NUM_OSC];          // Position in the reading of each oscillator table 
    volatile uint32_t ulPhaseIncrement[NUM_OSC] ;  // Reading speed of each oscillaotr table 
@@ -87,7 +85,7 @@ public:
    }
 
 // Set the note (frequency), and volume 
-   void setNote(uint32_t note, uint32_t vol)
+   void setNote(uint32_t note, int32_t vol)
    {
 // If we are in glide mode and the synth is not playing, we have to compute the glide increment (= glide speed)	
 // We do not have to change the frequency value, it's the glide increment which will change it
@@ -130,7 +128,7 @@ public:
    }
 
 // Set the volume of one oscillator
-   void setVolOsc(uint8_t num, uint32_t vol)
+   void setVolOsc(uint8_t num, int32_t vol)
    {
      volosc[num] = vol>>1;
    }
@@ -138,11 +136,9 @@ public:
 // Set the waveform of one oscillator
    void setWaveform(uint8_t num, uint32_t val)
    {
-     if(val<25) waveform[num] = 0;
-     if(val>=25&&val<50) waveform[num] = 1;
-     if(val>=50&&val<75) waveform[num] = 2;
-     if(val>=75&&val<100) waveform[num] = 3;
-     if(val>=100) waveform[num] = 4;
+     if(val<40) waveform[num] = 0;
+     if(val>=40&&val<80) waveform[num] = 1;
+     if(val>=80) waveform[num] = 2;
    }
 
 // Set the fine tune of one oscillator
@@ -187,16 +183,14 @@ public:
    }
 
 //Return the sample value from the wavetable 
-   uint32_t output()
+   int32_t output()
    {
-     uint32_t ret=0;
+     int32_t ret=0;
      for(int i=0; i<NUM_OSC; i++)
-	 {
+     {
        if(waveform[i] == 0) ret+= (nSineTable[ulPhaseAccumulator[i]>>20]* volosc[i])>>7;
        if(waveform[i] == 1) ret+= (nSawTable[ulPhaseAccumulator[i]>>20]* volosc[i])>>7;
        if(waveform[i] == 2) ret+= (nSqTable[ulPhaseAccumulator[i]>>20]* volosc[i])>>7;
-       if(waveform[i] == 3) ret+= (clavinet01[ulPhaseAccumulator[i]>>20]* volosc[i])>>7;
-       if(waveform[i] == 4) ret+= (ebass01[ulPhaseAccumulator[i]>>20]* volosc[i])>>7;
      }
      return ret;
    }
