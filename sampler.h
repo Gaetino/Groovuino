@@ -136,7 +136,7 @@ public:
        // So it's decreasing rapidly after we stop it (like a release of an enveloppe)
        if(possample>=decrease)
        {
-         if(volsample>0) volsample -= 1;
+         if(volsample>0) volsample -= 8;
        }
 
       // The sample doesn't start abruptly. There is a quick attack to avoid "clicks"
@@ -164,13 +164,13 @@ public:
   }
 
 // Read the wave file at a position. Returns the volume (12 bits)
-  uint32_t output()
+  int16_t output()
   {
-    uint32_t ret;
+    int16_t ret;
 	   
     if(play)
     {
-      ret = (((buf[bufread][indbuf]+32768)>>4)*volsample)>>10;
+      ret = ((buf[bufread][indbuf]>>4)*volsample)>>7;
     }
     else ret = 0;
 		 
