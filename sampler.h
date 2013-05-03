@@ -28,7 +28,6 @@ class Sampler
 {
 	
 public:
-   uint32_t volsample;         // volume applied to the sample (including enveloppe volume)
    uint32_t volglobal;         // volume max of the sample (when sustain)
    boolean play;               // is the sample playing or not ?
    int indbuf;                 // buffer number
@@ -42,17 +41,22 @@ public:
    
    SdFile myFile;              // The wave file
    wave_header header;         // The wave header
+   
+   boolean openfile ;          // Are we opening file ?
+   boolean closefile ;         // Are we closing file ?
+   const char* samplen;        // Storing the sample name
   
 
 // Init of the sampler object. Here you can put your default values.
    void init()
    {
-     volsample = 0;
      indbuf =0;
      bufread = 0;
      lastbuf = 0;
      play = false;
      volglobal = 800;	 
+     openfile = false;	
+     closefile = false;	 
    }
 
 // Play the sample, giving volume and note (volume 0-1024; note 0-128)
@@ -69,31 +73,21 @@ public:
    {
      bufread = 0;
      lastbuf = 0;
-     possample = 44;
-     myFile.open(samplename, O_READ);
-     myFile.read(&header, sizeof(header));
-     endofsample = header.chunk_size;
-     myFile.read(buf[0], sizeof(buf[0]));
-     volsample = 0;
-     decrease = endofsample-(2048*header.num_channels);
+     possample = 0;
+     samplen = samplename;
+     closefile = false;
+     openfile = true;
    }
 
 //Stop playing the sample
    void sstop()
    {
-     play=false;
-     myFile.close();
-   }
-
-// Stop playing the sample, giving a note.
-   void notestop(uint16_t note)
-   {
-     if(samplenote==note) 
+     if(play)
      {
-       decrease = possample;
-       endofsample = possample + header.num_channels*2048;  
+       closefile = true;
      }
    }
+
 
 // Set the volume of the sample
    void setVol(uint32_t vol)
@@ -108,20 +102,59 @@ public:
    }
 
 // Fill the buffer if it has to be. 
-// This method must not be called in the sound generating loop.
-   void buffill()
+// This method must not be called in the main program loop.
+// The return of the method indicates that it is reading a sound file
+   boolean buffill()
    {
+     boolean ret = false;
      if(play)
      {
+       // The buffer must be filled only if the previous buffer was finished to be read
        if(bufread==lastbuf)
        {
-         if(lastbuf==0) lastbuf = 1;
-         else lastbuf = 0;
-	 myFile.read(buf[lastbuf], sizeof(buf[lastbuf]));
+	 ret = true;
+       	 // If we the sample read has arrived to the end of the file, we must stop the sample reading
+         if(possample>=(endofsample-bufsize)) closefile=true;
+
+         // OPEN FILE
+	 if(openfile)
+	 {
+	   myFile.open(samplen, O_READ);
+	   myFile.read(&header, sizeof(header));
+	   endofsample = header.chunk_size-bufsize;
+	   myFile.read(buf[0], sizeof(buf[0]));
+	   possample = sizeof(buf[0]) + sizeof(header);
+	   openfile = false;
+ 	 }
+	 else
+	 {
+	   // CLOSE FILE
+           if(closefile) 
+           {
+	     myFile.close();
+	     play = false;
+	   }
+	   //READ FILE
+	   else
+	   {
+	     if(lastbuf==0) lastbuf = 1;
+	     else lastbuf = 0;
+			 
+	     int me = myFile.read(buf[lastbuf], sizeof(buf[lastbuf]));
+	     possample += sizeof(buf[lastbuf]);
+	     // If there is an error while reading sample file, we stop the reading and close the file
+             if(me<=0) 
+	     {
+	       play = false;
+	       myFile.close();
+	     }
+	   }
+	 }
        }
      }
+     return ret;
    }
-   
+ 
    
 // Compute the position of the next sample. Must be called in the sound generating loop, before the method "output()"   
    void next()
@@ -132,24 +165,10 @@ public:
        indbuf += header.num_channels; 
        possample += (header.num_channels + header.num_channels);
 	
-       // The sample doesn't stop playing abruptly, because it can make some "clicks"
-       // So it's decreasing rapidly after we stop it (like a release of an enveloppe)
-       if(possample>=decrease)
-       {
-         if(volsample>0) volsample -= 8;
-       }
-
-      // The sample doesn't start abruptly. There is a quick attack to avoid "clicks"
-      if(volsample<=volglobal&&possample<=1024)
+       // The reading of the file must stop at the end of file.
+      if(possample>=(endofsample-bufsize))
       {
-         volsample += 8;
-      }
-	
-      // The reading of the file must stop at the end of file.
-      if(possample>=(endofsample-1))
-      {
-         play = false;
-         myFile.close();
+         closefile = true;
       }
 
       // If a buffer is finished to be read, we read the other buffer.
@@ -170,7 +189,7 @@ public:
 	   
     if(play)
     {
-      ret = ((buf[bufread][indbuf]>>4)*volsample)>>7;
+      ret = ((buf[bufread][indbuf]>>4)*volglobal)>>7;
     }
     else ret = 0;
 		 
