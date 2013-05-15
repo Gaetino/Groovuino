@@ -48,6 +48,8 @@ public:
    boolean openfile ;          // Are we opening file ?
    boolean closefile ;         // Are we closing file ?
    const char* samplen;        // Storing the sample name
+   
+   int16_t patternplaying;    // The pattern which is currently playing the sample
   
 
 // Init of the sampler object. Here you can put your default values.
@@ -60,6 +62,7 @@ public:
      volglobal = 800;	 
      openfile = false;	
      closefile = false;	 
+     patternplaying = -1;
    }
 
 // Play the sample, giving volume and note (volume 0-1024; note 0-128)
@@ -166,7 +169,6 @@ public:
      {
        // If the wave file is stereo, we take only one side (left). 
        indbuf += header.num_channels; 
-       possample += (header.num_channels + header.num_channels);
 	
        // The reading of the file must stop at the end of file.
       if(possample>=(endofsample-bufsize))
@@ -188,14 +190,13 @@ public:
 // Read the wave file at a position. Returns the volume (12 bits)
   int16_t output()
   {
-    int16_t ret;
+    int16_t ret=0;
 	   
     if(play)
     {
       ret = ((buf[bufread][indbuf]>>4)*volglobal)>>7;
     }
-    else ret = 0;
-		 
+
     return ret;
   }
 };
