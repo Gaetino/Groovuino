@@ -3,6 +3,9 @@
 const int chipSelect = 10;         // For Due, the SS of SD Card is on pin 10. See SdFat library
 const int bufsize = 1024;          // buffer size in bytes. You can change this data.
 
+// Put here the filenames of your samples on SD card
+const char* samplefile[]= {"kick1.wav", "hithat1.wav", "snare1.wav", "snare2.wav"};
+
 // Header of a wave file.
 // Num_channels will tell us if we are in stereo (2) or mono (1)
 typedef struct {
