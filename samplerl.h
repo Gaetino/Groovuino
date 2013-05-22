@@ -52,8 +52,8 @@ public:
    {
      ulPhaseAccumulator = 0; 
      indbuf =0;
-	   bufread = 0;
-	   lastbuf = 0;
+     bufread = 0;
+     lastbuf = 0;
      ulPhaseIncrement = 1;  
      play = false;
      volglobal = 800;	
@@ -67,20 +67,20 @@ public:
      possample = sizeof(header);
      myFile.seekSet(sizeof(header));
 	 
-	   bufread = 0;
-	   lastbuf = 0;
+     bufread = 0;
+     lastbuf = 0;
 	 
      openfile=true;
-	   volglobal = vol;
-	   samplenote=note;
+     volglobal = vol;
+     samplenote=note;
    }
 
 
    void load(const char* samplename)
    {
      bufread = 0;
-	   lastbuf = 0;
-	   samplen = samplename;
+     lastbuf = 0;
+     samplen = samplename;
 	 
      myFile.open(samplen, O_READ);
      myFile.read(&header, sizeof(header));
@@ -89,7 +89,7 @@ public:
      myFile.read(buf[0], sizeof(buf[0]));
      possample = sizeof(buf[0]) + sizeof(header);
 	 
-	   volglobal = 0;
+     volglobal = 0;
    }
    
     
@@ -111,7 +111,7 @@ public:
    void close()
    {
      myFile.close();
-	   play = false;
+     play = false;
    }
    
       
@@ -119,27 +119,27 @@ public:
    {
      boolean ret = false;
      if(play||openfile)
-	   {
+     {
        if(bufread==lastbuf)
-	     {
-	       if(possample>=(endofsample-bufsize)) play=false;
-	       ret = true;
+       {
+         if(possample>=(endofsample-bufsize)) play=false;
+         ret = true;
        
          if(lastbuf==0) lastbuf = 1;
          else lastbuf = 0;
 			 
-	       int me = myFile.read(buf[lastbuf], sizeof(buf[lastbuf]));
-		     possample += sizeof(buf[lastbuf]);
+         int me = myFile.read(buf[lastbuf], sizeof(buf[lastbuf]));
+         possample += sizeof(buf[lastbuf]);
 		 
-		     if(openfile) {play = true; openfile=false;}
+         if(openfile) {play = true; openfile=false;}
 
          if(me<=0) 
          {
            play = false;
-	       }
-	     }
-	   }
-  	 return ret;
+         }
+       }
+     }
+     return ret;
    }
    
    
@@ -148,32 +148,30 @@ public:
    {
      if(play)  
      {
-		 
-	     indbuf += header.num_channels;
+       indbuf += header.num_channels;
 	 
-		   if(possample>=(endofsample-bufsize))
-	  	 {
-	 	     play = false;
-		   }
+       if(possample>=(endofsample-bufsize))
+       {
+         play = false;
+       }
 
-	     if(indbuf>=bufsize)
-	     {
-		     if(bufread==0) bufread = 1;
-	       else bufread = 0;
-	       
-		     indbuf=0;
-		   }
+       if(indbuf>=bufsize)
+       {
+         if(bufread==0) bufread = 1;
+         else bufread = 0;
+         indbuf=0;
+       }
      } 
    }
    
    int16_t output()
    {
- 	   int16_t ret=0;
+     int16_t ret=0;
 
      if(play)
      {
-	     ret = ((buf[bufread][indbuf]>>4)*volglobal)>>7;
+       ret = ((buf[bufread][indbuf]>>4)*volglobal)>>7;
      }
-	   return ret;
+     return ret;
    }
 };
