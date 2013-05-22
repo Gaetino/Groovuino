@@ -1,7 +1,11 @@
+//This exemple is a simple mono 3-osc synth MIDI controlled
+// It needs the DueTimer library
+
 #include <MIDI.h>
 #include <osc.h>
 #include <env.h>
 #include <Filter.h>
+#include <DueTimer.h>
 
 
 #define POLIPHONY 1
@@ -32,24 +36,8 @@ void setup()
   createSawTable();  
   createSqTable();  
    
-  /* turn on the timer clock in the power management controller */ 
-  pmc_set_writeprotect(false); 
-  pmc_enable_periph_clk(ID_TC4); 
+  Timer0.attachInterrupt(loop1).setFrequency(44100).start();
  
-  /* we want wavesel 01 with RC */ 
-  TC_Configure(/* clock */TC1,/* channel */1, TC_CMR_WAVE | TC_CMR_WAVSEL_UP_RC | TC_CMR_TCCLKS_TIMER_CLOCK2); 
-  TC_SetRC(TC1, 1, 235); // sets  <> 44.1 Khz interrupt rate 
-  TC_Start(TC1, 1); 
-   
-  // enable timer interrupts on the timer  
-  TC1->TC_CHANNEL[1].TC_IER=TC_IER_CPCS; 
-  TC1->TC_CHANNEL[1].TC_IDR=~TC_IER_CPCS; 
-   
-  /* Enable the interrupt in the nested vector interrupt controller */ 
-  /* TC4_IRQn where 4 is the timer number * timer channels (3) + the channel number (=(1*3)+1) for timer1 channel1 */ 
-  NVIC_EnableIRQ(TC4_IRQn); 
- 
-  // this is a cheat - enable the DAC 
   analogWrite(DAC1,0); 
   
   MIDI.begin();              // Launch MIDI with default options
@@ -79,22 +67,16 @@ void loop()
 } 
 
   
-void TC4_Handler() 
+void loop1() 
 { 
-  // We need to get the status to clear it and allow the interrupt to fire again 
-  TC_GetStatus(TC1, 1); 
- 
-  uint32_t ulOutput=0;
+  uint32_t ulOutput=2048;
   
   oscA[0].next();
 
-  ulOutput += oscA[0].output();
-   
-  if(ulOutput>10) ulOutput = (uint32_t)LP.next((int)ulOutput - 2048)+2048;
-  
-  ulOutput = (ulOutput * env1[0].amount())>>19;
+  ulOutput += LP.next((oscA[0].output()*(int32_t)env1[0].amount())/524288);
   
   if(ulOutput>4095) ulOutput=4095;
+  if(ulOutput<0) ulOutput=0;
    
   dacc_write_conversion_data(DACC_INTERFACE, ulOutput); 
 }
