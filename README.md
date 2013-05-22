@@ -21,4 +21,4 @@ http://rcarduino.blogspot.com/2012/12/arduino-due-dds-part-1-sinewaves-and.html
 
 
 Details on library and hardware are on my blog :
-http://groovuino.blogspot.com/2013/03/the-goal-is-to-build-groovebox-using.html
+http://groovuino.blogspot.com/
