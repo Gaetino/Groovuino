@@ -1,3 +1,6 @@
+// If you want to play only one sample per voice, use this samplerl.h
+// Else, if you want to skip samples on the same voice, use sampler.h
+
 #include <arduino.h>
 
 const int chipSelect = 10;
