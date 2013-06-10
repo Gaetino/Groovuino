@@ -5,30 +5,26 @@
 
 const int chipSelect = 10;
 const int bufsize = 1024;
+uint16_t n = 4;
 
-const char* samplefile[]= {"kick1.wav", "hithat1.wav", "snare1.wav", "snare2.wav"};
+const char* samplefile[]= {"kick1.wav","hithat1.wav" , "snare1.wav","snare2.wav", "kick2.wav", "snare3.wav" };
 
-typedef struct {
-  char RIFF[4]; 
-  int32_t chunk_size;
-  char WAVE[4]; 
-  char fmt_[4]; 
-  int32_t subchunk1_size;
-  int16_t audio_format;
-  int16_t num_channels;
-  int32_t sample_rate;
-  int32_t byte_rate;
-  int16_t block_align;
-  int16_t bits_per_sample;
-  char DATA[4]; 
-  int32_t subchunk2_size;
-} wave_header;
+bool readChunk(void* buf, uint32_t startBlock, uint16_t blockCount)
+{
+  uint8_t* dst = (uint8_t*)buf;
+  if(!sd.card()->readStart(startBlock)) return false;
+  for(uint16_t i = 0; i < blockCount; i++)
+  {
+    if(!sd.card()->readData(dst + i*512L)) return false;
+  }
+  return sd.card()->readStop();
+}
+
 
 class Samplerl
 {
   
 public:
-   uint32_t volsample;
    uint32_t volglobal;
    uint32_t ulPhaseAccumulator; 
    volatile uint32_t ulPhaseIncrement ;  
@@ -37,14 +33,16 @@ public:
    uint16_t bufread;
    uint16_t lastbuf;
    int16_t buf[2][bufsize];
-   uint32_t possample;
-   uint32_t endofsample;
-   uint32_t decrease;
-   uint16_t samplenote;
+
+   uint32_t bgnBlock;
+   uint32_t posBlock;
+   uint32_t endBlock;
+   
+   uint32_t endData;
+   uint32_t posData;
+   uint32_t bgnData;
    
    SdFile myFile;
-   
-   wave_header header;
    
    boolean openfile ;
    boolean closefile ;
@@ -65,17 +63,17 @@ public:
    }
 
 
-   void splay(uint32_t vol, uint16_t note)
+   void splay(uint32_t vol)
    {
-     possample = sizeof(header);
-     myFile.seekSet(sizeof(header));
-	 
      bufread = 0;
      lastbuf = 0;
 	 
      openfile=true;
      volglobal = vol;
-     samplenote=note;
+	 
+     posData = 0;
+     posBlock = bgnBlock;
+     indbuf = bgnData;
    }
 
 
@@ -86,13 +84,32 @@ public:
      samplen = samplename;
 	 
      myFile.open(samplen, O_READ);
-     myFile.read(&header, sizeof(header));
-     endofsample = header.chunk_size-bufsize;
-  
-     myFile.read(buf[0], sizeof(buf[0]));
-     possample = sizeof(buf[0]) + sizeof(header);
+     Serial.println(myFile.contiguousRange(&bgnBlock, &endBlock));
+      
+     posBlock = bgnBlock;
+
+     readChunk(buf[0], posBlock, n);
+	 
+     int dataind=18;
+
+     if((char)(buf[0][18]&0x00ff) != 'd')
+     {
+       for (int i = 18; i < 1023; i++) { 
+         if((char)(buf[0][i]&0x00ff)=='d') if((char)((buf[0][i]&0xff00)>>8)=='a') {dataind = i; i=1025;}
+	 if((char)((buf[0][i]&0xff00)>>8)=='d') if((char)(buf[0][i+1]&0x00ff)=='a')  {dataind = i; i=1025;}
+       }
+       endData = ((uint16_t)buf[0][dataind+2])>>1;
+     } 
+     else endData = ((uint16_t)buf[0][20])>>1;
+
+     bgnData = dataind+4; //  the buffer is 1024 16 bits integer long. So 4 x 512 bytes. (4 blocks)
+     posData = 0;
+     indbuf = bgnData;
+	 
+     posBlock +=4;
 	 
      volglobal = 0;
+      
    }
    
     
@@ -106,18 +123,6 @@ public:
      volglobal = vol;
    }
    
-   void setEnd(uint32_t theEnd)
-   {
-     endofsample = (endofsample*theEnd)>>7;
-   }
-   
-   void close()
-   {
-     myFile.close();
-     play = false;
-   }
-   
-      
    boolean buffill()
    {
      boolean ret = false;
@@ -125,21 +130,18 @@ public:
      {
        if(bufread==lastbuf)
        {
-         if(possample>=(endofsample-bufsize)) play=false;
          ret = true;
-       
          if(lastbuf==0) lastbuf = 1;
          else lastbuf = 0;
-			 
-         int me = myFile.read(buf[lastbuf], sizeof(buf[lastbuf]));
-         possample += sizeof(buf[lastbuf]);
-		 
-         if(openfile) {play = true; openfile=false;}
 
-         if(me<=0) 
-         {
-           play = false;
-         }
+         readChunk(buf[lastbuf], posBlock, n);
+         posBlock +=4;		   
+
+ 	 if(openfile) 
+	 {
+	   play = true; 
+	   openfile=false; 
+	 }
        }
      }
      return ret;
@@ -151,12 +153,11 @@ public:
    {
      if(play)  
      {
-       indbuf += header.num_channels;
+		 
+       indbuf ++;
+       posData ++;
 	 
-       if(possample>=(endofsample-bufsize))
-       {
-         play = false;
-       }
+       if(posData>=(endData)) play = false; 
 
        if(indbuf>=bufsize)
        {
@@ -169,12 +170,8 @@ public:
    
    int16_t output()
    {
-     int16_t ret=0;
-
-     if(play)
-     {
-       ret = ((buf[bufread][indbuf]>>4)*volglobal)>>7;
-     }
-     return ret;
+       int16_t ret=0;
+       if(play) ret = ((buf[bufread][indbuf]>>4)*volglobal)>>7;
+       return ret;
    }
 };
