@@ -9,8 +9,6 @@ class LowPassFilter
 public:
 
 
-	LowPassFilter();
-
 	void setCutoffFreq(unsigned char cutoff)
 	{
 		f = cutoff;
