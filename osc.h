@@ -2,7 +2,7 @@
 #include <tables.h>
 
 // Change this to change the number of oscillators per voice
-#define NUM_OSC 3 
+#define NUM_OSC 1 
 
 // Can adjust the Sample rate
 #define SAMPLE_RATE 44100.0 
@@ -50,12 +50,12 @@ public:
      volosc[0] = 64;
      fine[0] = 0;
 
-     waveform[1] = 1;
-     volosc[1] = 64;
+     waveform[1] = 0;
+     volosc[1] = 0;
      fine[1] = 0;
 
      waveform[2] = 0;
-     volosc[2] = 64;
+     volosc[2] = 0;
      fine[2] = 0;
      
      ulPhaseAccumulator[0] = 0; 
@@ -71,7 +71,7 @@ public:
      octave[2] = -1;
 	 
 //GLIDE
-     glideon = true;
+     glideon = false;
      glidestart = false;
      Incrementglide[0]=0;
      Incrementfin[0]=0;
@@ -82,6 +82,16 @@ public:
      noteplaying = 0;
      glidetime = 1000; // (en ms)
      play = false;
+   }
+   
+   void setFrequency(uint32_t note)
+   {
+      for(int i=0; i<NUM_OSC; i++)
+      {
+         fFrequency = ((pow(2.0,((note+12*octave[i])+(fine[i]/256)-69.0)/12.0)) * 440.0)*TICKS_PER_CYCLE; 
+         ulPhaseIncrement[i] = fFrequency; 
+      }
+      noteplaying = note;
    }
 
 // Set the note (frequency), and volume 
@@ -112,11 +122,8 @@ public:
        play = true;
      }
 //Fill the volume data
-     if(vol!=0) 
-     {
-       volglb = vol;
-       noteplaying = note;
-     }
+     noteplaying = note;
+     
 // If the volume = 0, we consider that the synth is stopped
      else play = false;
    }
