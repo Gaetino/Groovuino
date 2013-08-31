@@ -124,8 +124,6 @@ public:
 //Fill the volume data
      noteplaying = note;
      
-// If the volume = 0, we consider that the synth is stopped
-     else play = false;
    }
 
 // Stop the playing of the synth
